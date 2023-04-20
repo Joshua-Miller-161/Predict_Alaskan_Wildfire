@@ -1,0 +1,36 @@
+The iPython notebooks in this folder preprocess the data used to train the models. These notebooks use large datasets obtained from the sources listed below. The notebooks with "GetSubset" in their filename simply extract a spatial subset of the data from the dataset from the original source. These subsets are then passed to notebooks with "Krig" and "Grid" in their file name, which spatially interpolate/extrapolate the subset so that it matches the Max. Temp. gridded data, which I used as the template onto which I kriged every dataset.
+
+The JavaScript file "GetSubset_MODIS_Fire.js" was used in Google Earth Engine, and downloads a 1-day snapshot of fire activity in a small bounding box specified by the locations at the beginning of the code. To find the dates where the fire occured, use the SumList variable which lists the sum of the MaxFRP values for each pixel in the bounding box for each day.
+
+
+Sources:
+M.M. Thornton et al. Daymet: Daily Surface Weather Data on a 1-km Grid for North America, Version 4 R1.
+en. 2022. doi: 10.3334/ORNLDAAC/2129. url: https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=2129.
+     - Where I obtained Max. Temp., Min. Temp., and Precipitation
+     - Used by "GetSubset_and_Plot_MaxTemp_Grid.ipynb", "GetSubset_and_Plot_MinTemp_Grid.ipynb", "GetSubset_and_Plot_Precip_Grid.ipynb"
+
+Y. Yi, J. Kimball, and C.E. Miller. ABoVE: High Resolution Cloud-Free Snow Cover Extent and Snow Depth,
+Alaska, 2001-2017. en. 2020. doi: 10.3334/ORNLDAAC/1757. url: https://daac.ornl.gov/cgi-bin/dsviewer.
+pl?ds_id=1757.
+     - Where I obtained the snow cover data.
+     - Used by "GetSubset_and_Plot_Snow_v2.ipynb" and "Krig_Snow_to_Tmax_grid.ipynb".
+
+Peter Bieniek. Historical gridded lightning, Alaska, AK NSF EPSCoR Fire and Ice, (1986 - 2017). 2020. url:
+https://search.dataone.org/view/10.24431/rw1k45z.
+     - Where I obtained the Lightning data.
+     - Used by "GetSubset_and_Plot_Lightning.ipynb" and "Krig_Lighting_to_Tmax_Grid.ipynb".
+
+Geological Survey U.S. Department of Interior and U.S. Department of Agriculture. LANDFIRE Existing Vege-
+tation Type Layer. en. 2020. url: http://landfire.cr.usgs.gov/viewer/.
+     - Where I obtained the 2014 EVT raster and key with the RGB values for plotting
+     - Used by "Krig_LandFire_to_Tmax_Grid.ipynb"
+
+Geological Survey U.S. Department of Interior and U.S. Department of Agriculture. LANDFIRE Existing Vege-
+tation Cover Layer. en. 2020. url: http://landfire.cr.usgs.gov/viewer/.
+     - Where I obtained the 2014 EVC raster and key with the RGB values for plotting
+     - Used by "Krig_LandFire_to_Tmax_Grid.ipynb"
+     
+Geological Survey U.S. Department of Interior and U.S. Department of Agriculture. LANDFIRE Existing Vege-
+tation Height Layer. en. 2020. url: http://landfire.cr.usgs.gov/viewer
+     - Where I obtained the 2014 EVH raster and key with the RGB values for plotting
+     - Used by "Krig_LandFire_to_Tmax_Grid.ipynb"
