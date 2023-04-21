@@ -1,0 +1,1 @@
+Interpolation also refers to the "Reconstruct Fire Season Task". The interp_utils folder holds some functions which are specific to this task.
