@@ -1,0 +1,1 @@
+The goal for these models is to predict on which days wildfires occur during latter half of the year season using all data from all locations during the first half of the year. The forecast_utils folder holds certain helper functions specific to this task.
