@@ -1,3 +1,8 @@
+import numpy as np
+from sklearn import preprocessing
+from functools import reduce
+import os
+
 def Funnel(start_size, end_size, r=np.e):
     sizes = [start_size]
 
