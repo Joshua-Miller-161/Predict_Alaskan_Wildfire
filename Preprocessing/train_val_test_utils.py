@@ -1,6 +1,7 @@
-
-
-
+import numpy as np
+import os
+import extraction_funcs
+import misc
 
 def Split(data, i, hist_period_len, days_to_predict, skip):
     '''
@@ -86,7 +87,10 @@ def Hist_and_Target(data, hist_period_len, days_to_predict, skip, shuf=False, sh
             return np.array(histories), np.array(targets)
 
 
-def CombineLocations(loc_names, folder_name, var_name, orig_shape, total_histories, total_targets, shuffle=False, shuffle_idx=None, downsample_rate=1):
+def CombineLocations(loc_names, folder_name, var_name, orig_shape, total_histories, 
+                     total_targets, base_path, fire_pix_val,
+                     hist_period_len, days_to_predict, skip,
+                     shuffle=False, shuffle_idx=None, downsample_rate=1):
     '''
     This is where all of the preoprocessing functions are employed. The particular variable determined by folder_name and var name
     from each of the locations in loc_names is extracted, scaled, downsampled, and turned into sequences of histories and targets.
@@ -97,7 +101,13 @@ def CombineLocations(loc_names, folder_name, var_name, orig_shape, total_histori
     :param orig_shape: tuple, The unflattened shape of the .nc files, (time, spat_dim1, spat_dim2)
     :param total_histories: ndarray, Must have dimensions (365 - hist_period_len - days_to_predict, hist_period_len, len(loc_names) * number of spatial samples in data).
     :param total_targets: ndarray, Must have dimensions (365 - hist_period_len - days_to_predict, days_to_predict, len(loc_names) * number of spatial samples in data)
-    :param shuffle: bool, If true, this will shuffle the order of the histories and targets created by Hist_and_Target
+    :param base_path: str, The absolute path to the folder that contains all of the data
+    :param fire_pix_val: float, The value that every MaxFRP value from the MODIS fire .tif files will be set to if that MaxFRP value is greater than one
+    :param hist_period_len: int, How far forward to move from the starting point i
+    :param days_to_predict: int, How many consecutive timesteps after hist_period_len the model should predict
+    :param skip: int, How many days are skipped between timesteps in the historical period, must divide hist_period_len
+    :param shuffle: bool, If true, this will shuffle the order of the histories and targets created by Hist_and_Target according to shuffle_idx
+    :param shuffle_idx: (1-D ndarray), Must be a permuation of integers 0 - np.shape(histories)[0]. Dictates how the histories and targets arrays will be shuffled
     :param downsample_rate: int, Must divide the len of the axis on which it's called. By what factor the data's resolution is reduced.
                                  1 MEANS NO DOWNSAMPLING, 2 means take every other element, 3 etc.
     '''
@@ -109,17 +119,17 @@ def CombineLocations(loc_names, folder_name, var_name, orig_shape, total_histori
         # --------------------------------------------------------------------------
         path = os.path.join(base_path, os.path.join(loc_names[0], folder_name))
         # --------------------------------------------------------------------------
-        var_big_flat = ExtractFire(path, orig_shape, var_name, make_binary=True, max_val=fire_pix_val)
+        var_big_flat = extraction_funcs.ExtractFire(path, orig_shape, var_name, make_binary=True, max_val=fire_pix_val)
 
         #print('var_big_flat =', np.shape(var_big_flat), ', orig_shape =', orig_shape)
         #var_big = var_big_flat.reshape(orig_shape[:-1] + (-1,))
         var_big = var_big_flat.reshape((np.shape(var_big_flat)[0],) + orig_shape[1:])
         #print('var_big =', np.shape(var_big), ', orig_shape =', orig_shape)
         # --------------------------------------------------------------------------
-        var = MaxPool2D(var_big, pool_size=(downsample_rate, downsample_rate))
+        var = misc.MaxPool2D(var_big, pool_size=(downsample_rate, downsample_rate))
 
         # --------------------------------------------------------------------------
-        var_flat = FlattenAx(var, (1, 2))
+        var_flat = misc.FlattenAx(var, (1, 2))
 
         # --------------------------------------------------------------------------
         var_sum = np.sum(var_flat, axis=-1)
@@ -132,17 +142,17 @@ def CombineLocations(loc_names, folder_name, var_name, orig_shape, total_histori
             # --------------------------------------------------------------------------
             path = os.path.join(base_path, os.path.join(loc_names[loc_idx], folder_name))
             # --------------------------------------------------------------------------
-            var_big_flat = ExtractFire(path, orig_shape, var_name, make_binary=True, max_val=fire_pix_val)
+            var_big_flat = extraction_funcs.ExtractFire(path, orig_shape, var_name, make_binary=True, max_val=fire_pix_val)
 
             #print('var_big_flat =', np.shape(var_big_flat), ', orig_shape =', orig_shape)
             #var_big = var_big_flat.reshape(orig_shape[:-1] + (-1,))
             var_big = var_big_flat.reshape((np.shape(var_big_flat)[0],) + orig_shape[1:])
             #print('var_big =', np.shape(var_big), ', orig_shape =', orig_shape)
             # --------------------------------------------------------------------------
-            var = MaxPool2D(var_big, pool_size=(downsample_rate, downsample_rate))
+            var = misc.MaxPool2D(var_big, pool_size=(downsample_rate, downsample_rate))
 
             # --------------------------------------------------------------------------
-            var_flat = FlattenAx(var, (1, 2))
+            var_flat = misc.FlattenAx(var, (1, 2))
 
             # --------------------------------------------------------------------------
             var_sum += np.sum(var_flat, axis=-1)
@@ -173,13 +183,13 @@ def CombineLocations(loc_names, folder_name, var_name, orig_shape, total_histori
                 if (filename.endswith('.nc') or filename.endswith('.xlsx') or filename.endswith('.csv')):
                     
                     if (filename.endswith('.nc')):
-                        lon_big, lat_big, var_big = Extract_netCDF4(filename, var_name)
+                        lon_big, lat_big, var_big = extraction_funcs.Extract_netCDF4(filename, var_name)
                         # --------------------------------------------------------------------------
-                        lon = DownSample(DownSample(lon_big, downsample_rate, 0), downsample_rate, 1)
-                        lat = DownSample(DownSample(lat_big, downsample_rate, 0), downsample_rate, 1)
-                        var = DownSample(DownSample(var_big, downsample_rate, 1), downsample_rate, 2)
+                        lon = misc.DownSample(misc.DownSample(lon_big, downsample_rate, 0), downsample_rate, 1)
+                        lat = misc.DownSample(misc.DownSample(lat_big, downsample_rate, 0), downsample_rate, 1)
+                        var = misc.DownSample(misc.DownSample(var_big, downsample_rate, 1), downsample_rate, 2)
                         # --------------------------------------------------------------------------
-                        var_flat = FlattenAx(var, (1, 2))
+                        var_flat = misc.FlattenAx(var, (1, 2))
 
                         print('Is NC :', np.shape(var_big), np.shape(var), np.shape(var_flat))
                         # --------------------------------------------------------------------------
@@ -189,17 +199,17 @@ def CombineLocations(loc_names, folder_name, var_name, orig_shape, total_histori
                         total_targets[:, :, (loc_idx * np.shape(targets)[2]) : ((loc_idx+1) * np.shape(targets)[2]), :] = targets
 
                     elif ((folder_name == 'Land_Fire') and filename.endswith('.csv')):
-                        var_big_flat = ExtractLandFire(filename, orig_shape, var_name)
+                        var_big_flat = extraction_funcs.ExtractLandFire(filename, orig_shape, var_name)
                         #print('var_big_flat =', np.shape(var_big_flat), ', orig_shape =', orig_shape)
 
                         var_big = var_big_flat.reshape((np.shape(var_big_flat)[0],) + orig_shape[1:])
                         #var_big = var_big_flat.reshape(orig_shape[:-1] + (-1,))
                         #print('var_big =', np.shape(var_big), ', orig_shape =', orig_shape)
                         # --------------------------------------------------------------------------
-                        var = DownSample(DownSample(var_big, downsample_rate, 1), downsample_rate, 2)
+                        var = misc.DownSample(misc.DownSample(var_big, downsample_rate, 1), downsample_rate, 2)
                         #print('var =', np.shape(var))
                         # --------------------------------------------------------------------------
-                        var_flat = FlattenAx(var, (1, 2))
+                        var_flat = misc.FlattenAx(var, (1, 2))
 
                         print('Is LandFire :', orig_shape, np.shape(var_big_flat), np.shape(var_big_flat), np.shape(var), np.shape(var_flat))
                         # --------------------------------------------------------------------------
@@ -215,7 +225,10 @@ def CombineLocations(loc_names, folder_name, var_name, orig_shape, total_histori
                     print(filename, ' is invalid file type, valid : (.nc, .csv, .xlsx)')
 
 
-def CombineLocations_lonlattime(loc_names_train, folder_name, var_name, orig_shape, total_histories, total_targets, shuffle=False, shuffle_idx=None, downsample_rate=1):
+def CombineLocations_lonlattime(loc_names_train, folder_name, var_name, orig_shape, 
+                                total_histories, total_targets, base_path,
+                                hist_period_len, days_to_predict, skip,
+                                shuffle=False, shuffle_idx=None, downsample_rate=1):
     '''
     This is where all of the preoprocessing functions are employed. The particular variable determined by folder_name and var name
     from each of the locations in loc_names_train is extracted, scaled, downsampled, and turned into sequences of histories and targets.
@@ -227,30 +240,35 @@ def CombineLocations_lonlattime(loc_names_train, folder_name, var_name, orig_sha
     :param total_histories: ndarray, The first dimension must be len(loc_names_train) * histories for one variable. Where the sequences of histories
                                      for the varaible in all the locations in loc_names_train are kept.
     :param total_targets: ndarray, Same as total_histories but for the targets
+    :param base_path: str, The absolute path to the folder that contains all of the data
+    :param hist_period_len: int, How far forward to move from the starting point i
+    :param days_to_predict: int, How many consecutive timesteps after hist_period_len the model should predict
+    :param skip: int, How many days are skipped between timesteps in the historical period, must divide hist_period_len
     :param shuffle: bool, If true, this will shuffle the order of the histories and targets created by Hist_and_Target
+    :param shuffle_idx: (1-D ndarray), Must be a permuation of integers 0 - np.shape(histories)[0]. Dictates how the histories and targets arrays will be shuffled
     :param downsample_rate: int, Must divide the len of the axis on which it's called. By what factor the data's resolution is reduced.
                                  1 MEANS NO DOWNSAMPLING, 2 means take every other element, 3 etc.
     '''
     for loc in range(0, len(loc_names_train)):
         path = os.path.join(base_path, os.path.join(loc_names_train[loc], folder_name))
 
-        tmax_filenames = FindFiles(path, ['krig_grid', 'tmax'])
+        tmax_filenames = misc.FindFiles(path, ['krig_grid', 'tmax'])
 
         for tmax_filename in tmax_filenames:
             print('tmax_filename :', tmax_filename)
    
             if (tmax_filename.endswith('.nc')):
 
-                tmax_lon_big, tmax_lat_big, tmax_big = Extract_netCDF4(tmax_filename, 'tmax')
-                tmax_flat_big = FlattenAx(tmax_big, (1, 2))
+                tmax_lon_big, tmax_lat_big, tmax_big = extraction_funcs.Extract_netCDF4(tmax_filename, 'tmax')
+                tmax_flat_big = misc.FlattenAx(tmax_big, (1, 2))
 
-                tmax_lon = DownSample(DownSample(tmax_lon_big, downsample_rate, 0), downsample_rate, 1)
-                tmax_lat = DownSample(DownSample(tmax_lat_big, downsample_rate, 0), downsample_rate, 1)
-                tmax = DownSample(DownSample(tmax_big, downsample_rate, 1), downsample_rate, 2)
-                tmax_flat = FlattenAx(tmax, (1, 2))
+                tmax_lon = misc.DownSample(misc.DownSample(tmax_lon_big, downsample_rate, 0), downsample_rate, 1)
+                tmax_lat = misc.DownSample(misc.DownSample(tmax_lat_big, downsample_rate, 0), downsample_rate, 1)
+                tmax = misc.DownSample(misc.DownSample(tmax_big, downsample_rate, 1), downsample_rate, 2)
+                tmax_flat = misc.FlattenAx(tmax, (1, 2))
 
                 orig_shape_big = np.shape(tmax_big)
-                flat_shape_big  = np.shape(FlattenAx(tmax_big, (1, 2)))
+                flat_shape_big = np.shape(misc.FlattenAx(tmax_big, (1, 2)))
 
                 orig_shape = np.shape(tmax)
                 flat_shape = np.shape(tmax_flat)
