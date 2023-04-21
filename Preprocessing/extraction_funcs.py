@@ -1,3 +1,9 @@
+import netCDF4 as nc
+import numpy as np
+import pandas as pd
+import misc
+import os
+
 def Extract_netCDF4(path, var_name, scale=True):
     '''
     This will load lon, lat, and data from an nc file, and transpose it so the time dimension in the data is last
@@ -23,7 +29,7 @@ def Extract_netCDF4(path, var_name, scale=True):
         f.close()
 
         if scale:
-            val = Scale(var, var)
+            val = misc.Scale(var, var)
 
         return lon, lat, var
 
@@ -47,7 +53,7 @@ def ExtractLandFire(path, target_arr_shape, var_name, scale=True):
         
         if scale:
             print('SCALING')
-            var = Scale(var, var)  #.reshape(np.shape(mod_fire)[:2])
+            var = misc.Scale(var, var)  #.reshape(np.shape(mod_fire)[:2])
                 
         var_tiled = np.tile(var, (target_arr_shape[0], 1))
         print('Pulling ', path, ', var =', np.shape(var), ', var_tiled =', np.shape(var_tiled), ', target_shape =', target_arr_shape)
@@ -75,7 +81,7 @@ def ExtractFire(path, target_arr_shape, var_name, make_binary=False, max_val=1, 
     
     for filename in os.listdir(path):
         if (filename.endswith('.xlsx')):
-            day_idx = ExtractNumberfromFilename(filename)
+            day_idx = misc.ExtractNumberfromFilename(filename)
 
             curr_var = pd.read_excel(os.path.join(path, filename))[var_name].values
 
@@ -84,7 +90,7 @@ def ExtractFire(path, target_arr_shape, var_name, make_binary=False, max_val=1, 
                 #curr_mod_fire = np.array(curr_mod_fire).reshape(target_arr_shape[0], target_arr_shape[1])
 
             elif scale:
-                curr_var = Scale(curr_var, 'maxabs')
+                curr_var = misc.Scale(curr_var, 'maxabs')
 
             print('Pulling ', filename, ", target_arr_shape =", target_arr_shape, ", mod_fire =", np.shape(mod_fire), ", curr_var =", np.shape(curr_var), ', sum = ', np.sum(curr_var))
 
