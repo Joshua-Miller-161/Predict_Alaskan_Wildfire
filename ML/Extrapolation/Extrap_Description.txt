@@ -1,0 +1,1 @@
+This is also referred to as the "Predict Fire in a New Location Task". The goal for these models is to use data from certain locations to predict fire activity in a new location which the model knows nothing about a priori. The extrap_utils folder holds functions which are used for these models.
