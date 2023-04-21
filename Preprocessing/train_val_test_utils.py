@@ -175,7 +175,7 @@ def CombineLocations(loc_names, folder_name, var_name, orig_shape, total_histori
 
             path = os.path.join(base_path, os.path.join(loc_names[loc_idx], folder_name))
         
-            filenames = FindFiles(path, ['krig_grid', var_name])
+            filenames = misc.FindFiles(path, ['krig_grid', var_name])
 
             for filename in filenames:
                 print('filename :', filename)
