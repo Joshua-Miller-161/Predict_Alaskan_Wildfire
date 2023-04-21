@@ -18,7 +18,7 @@ def Funnel(start_size, end_size, r=np.e):
 
 def MaxPool2D(x, pool_size=(2, 2), strides=None, axes=(1,2), padding='valid'):
     '''
-    Made by ChatGPT - Downsamples a 3D numpy array along the specified axes by taking every nth element.
+    From ChatGPT - Downsamples a 3D numpy array along the specified axes by taking every nth element.
     :param x: ndarray, The input array to downsample. Must have shape (dim1, spat_dim1, spat_dim2).
     :param pool_size: tuple, The number of elements aggregated and then sent to the maximum.
     :param strides: idk, 
@@ -28,20 +28,26 @@ def MaxPool2D(x, pool_size=(2, 2), strides=None, axes=(1,2), padding='valid'):
         new_spat_dim1 = ceil(spat_dim1 / downsample_rate) and
         new_spat_dim2 = ceil(spat_dim2 / downsample_rate)
     '''
+    def CeilDiv(a, b):
+        return -(a // -b)
+
+    
     if strides is None:
         strides = pool_size
 
     if padding == 'same':
         pad_height = max(pool_size[0] - x.shape[1] % pool_size[0], 0)
-        pad_width = max(pool_size[1] - x.shape[2] % pool_size[1], 0)
-        pad_top = pad_height // 2
+        pad_width  = max(pool_size[1] - x.shape[2] % pool_size[1], 0)
+        pad_top    = CeilDiv(pad_height, 2)
         pad_bottom = pad_height - pad_top
-        pad_left = pad_width // 2
-        pad_right = pad_width - pad_left
+        pad_left   = CeilDiv(pad_width, 2)
+        pad_right  = pad_width - pad_left
         x = np.pad(x, ((0, 0), (pad_top, pad_bottom), (pad_left, pad_right), (0, 0)), mode='constant')
 
-    out_height = (x.shape[1] - pool_size[0]) // strides[0] + 1
-    out_width = (x.shape[2] - pool_size[1]) // strides[1] + 1
+    out_height = CeilDiv(x.shape[1] - pool_size[0], strides[0]) + 1
+    out_width  = CeilDiv(x.shape[2] - pool_size[1], strides[1]) + 1
+
+    print("x.shape =", x.shape, ", pool =", pool_size, ", strides =", strides, ", out_width =", out_width, ', out_height =', out_height)
 
     out = np.zeros((x.shape[0], out_height, out_width))
 
