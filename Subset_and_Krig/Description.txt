@@ -1,13 +1,20 @@
-The iPython notebooks in this folder preprocess the data used to train the models. These notebooks use large datasets obtained from the sources listed below. The notebooks with "GetSubset" in their filename simply extract a spatial subset of the data from the dataset from the original source. These subsets are then passed to notebooks with "Krig" and "Grid" in their file name, which spatially interpolate/extrapolate the subset so that it matches the Max. Temp. gridded data, which I used as the template onto which I kriged every dataset.
+These notebooks use large datasets obtained from the sources listed below. The notebooks with "GetSubset" in their
+filename simply extract a spatial subset of the data from the dataset from the original source. These subsets are then 
+passed to notebooks with "Krig" and "Grid" in their file name, which spatially interpolate/extrapolate the subset so 
+that it matches the Max. Temp. gridded data, which I used as the template onto which I kriged every dataset.
 
-The JavaScript file "GetSubset_MODIS_Fire.js" was used in Google Earth Engine, and downloads a 1-day snapshot of fire activity in a small bounding box specified by the locations at the beginning of the code. To find the dates where the fire occured, use the SumList variable which lists the sum of the MaxFRP values for each pixel in the bounding box for each day.
+The JavaScript file "GetSubset_MODIS_Fire.js" was used in Google Earth Engine, and downloads a 1-day snapshot of fire 
+activity in a small bounding box specified by the locations at the beginning of the code. To find the dates where the
+fire occured, use the SumList variable which lists the sum of the MaxFRP values for each pixel in the bounding box for
+each day.
 
 
 Sources:
 M.M. Thornton et al. Daymet: Daily Surface Weather Data on a 1-km Grid for North America, Version 4 R1.
 en. 2022. doi: 10.3334/ORNLDAAC/2129. url: https://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=2129.
      - Where I obtained Max. Temp., Min. Temp., and Precipitation
-     - Used by "GetSubset_and_Plot_MaxTemp_Grid.ipynb", "GetSubset_and_Plot_MinTemp_Grid.ipynb", "GetSubset_and_Plot_Precip_Grid.ipynb"
+     - Used by "GetSubset_and_Plot_MaxTemp_Grid.ipynb", "GetSubset_and_Plot_MinTemp_Grid.ipynb", 
+       "GetSubset_and_Plot_Precip_Grid.ipynb"
 
 Y. Yi, J. Kimball, and C.E. Miller. ABoVE: High Resolution Cloud-Free Snow Cover Extent and Snow Depth,
 Alaska, 2001-2017. en. 2020. doi: 10.3334/ORNLDAAC/1757. url: https://daac.ornl.gov/cgi-bin/dsviewer.
